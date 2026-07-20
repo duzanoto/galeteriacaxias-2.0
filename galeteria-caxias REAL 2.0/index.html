@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeteria Caxias | Tradição e Sabor</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            cream: '#f5f5f0',
+                            olive: '#5A5A40',
+                            rust: '#8B4513',
+                            ink: '#1c1c1c',
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Cormorant Garamond"', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Firebase Compat SDKs for Dynamic Google Sheets Sync -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    
+    <style>
+        :root {
+            --brand-cream: #f5f5f0;
+            --brand-olive: #5A5A40;
+            --brand-ink: #1c1c1c;
+        }
+
+        body {
+            background-color: var(--brand-cream);
+            color: var(--brand-ink);
+            font-family: 'Inter', sans-serif;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        ::selection {
+            background-color: var(--brand-olive);
+            color: white;
+        }
+        
+        .pill-image {
+            border-radius: 9999px;
+            aspect-ratio: 3/4;
+            object-fit: cover;
+        }
+
+        .nav-link {
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(28, 28, 28, 0.7);
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+            text-underline-offset: 8px;
+        }
+
+        .nav-link:hover {
+            color: var(--brand-olive);
+            text-decoration: underline;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 w-full z-50 bg-brand-cream/80 backdrop-blur-md border-b border-brand-ink/5">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="text-2xl font-bold tracking-tight cursor-pointer font-serif" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                Galeteria <span class="text-brand-olive font-medium">Caxias</span>
+            </div>
+
+            <!-- Desktop Nav -->
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#hero" class="nav-link">O Galeto</a>
+                <a href="#menu" class="nav-link">Menu</a>
+                <a href="#gallery" class="nav-link">Galeria</a>
+                <a href="#contact" class="nav-link">Contato</a>
+                <a href="#contact" class="px-6 py-2 bg-brand-olive text-white rounded-full text-sm font-medium hover:bg-brand-olive/90 transition-all shadow-lg shadow-brand-olive/20">
+                    Reservar
+                </a>
+            </div>
+
+            <!-- Mobile Toggle -->
+            <button class="md:hidden text-brand-ink" onclick="toggleMenu()">
+                <i data-lucide="menu" id="menu-icon"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden absolute top-20 left-0 w-full bg-brand-cream border-b border-brand-ink/5 px-6 py-8 flex flex-col gap-6 shadow-xl">
+            <a href="#hero" onclick="toggleMenu()" class="text-lg font-serif text-brand-ink">O Galeto</a>
+            <a href="#menu" onclick="toggleMenu()" class="text-lg font-serif text-brand-ink">Menu</a>
+            <a href="#gallery" onclick="toggleMenu()" class="text-lg font-serif text-brand-ink">Galeria</a>
+            <a href="#contact" onclick="toggleMenu()" class="text-lg font-serif text-brand-ink">Contato</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="pt-40 pb-20 px-6 overflow-hidden">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div class="fade-in">
+                <span class="text-brand-olive font-medium tracking-[0.3em] uppercase text-xs mb-4 block">
+                    Tradição Italiana desde 1991
+                </span>
+                <h1 class="text-6xl md:text-8xl font-bold leading-tight mb-8">
+                    A Essência do <br />
+                    <span class="italic font-normal text-brand-rust">Galeto ao Primo Canto</span>
+                </h1>
+                <p class="text-lg text-brand-ink/70 max-w-lg mb-10 leading-relaxed">
+                    O autêntico sabor da Serra Gaúcha, preparado com carinho e tradição. 
+                    Nossas receitas são passadas de geração em geração para trazer à sua mesa 
+                    o melhor da gastronomia ítalo-brasileira.
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a href="#menu" class="px-8 py-4 bg-brand-olive text-white rounded-full font-medium hover:scale-105 active:scale-95 transition-all text-lg shadow-xl shadow-brand-olive/30 block text-center">
+                        Conheça o Cardápio
+                    </a>
+                    <a href="#contact" class="px-8 py-4 border-2 border-brand-olive text-brand-olive rounded-full font-medium hover:bg-brand-olive hover:text-white transition-all text-lg block text-center">
+                        Falar com a gente
+                    </a>
+                </div>
+            </div>
+
+            <div class="relative fade-in" style="animation-delay: 0.2s;">
+                <div class="relative z-10">
+                    <img 
+                        src="src/assets/images/regenerated_image_1778292583432.png" 
+                        alt="Galeto Assado" 
+                        class="pill-image w-full shadow-2xl"
+                    />
+                </div>
+                <!-- Decorative dots -->
+                <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-zinc-200 rounded-full -z-0 blur-2xl opacity-50"></div>
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-brand-olive/20 rounded-full -z-0 blur-2xl opacity-50"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+                <div class="space-y-4 fade-in">
+                    <div class="w-16 h-16 bg-brand-cream rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="text-2xl font-serif text-brand-olive font-bold">01</span>
+                    </div>
+                    <h3 class="text-2xl font-bold">Produção Local</h3>
+                    <p class="text-brand-ink/60">Ingredientes selecionados de produtores locais para garantir o frescor absoluto.</p>
+                </div>
+                <div class="space-y-4 fade-in" style="animation-delay: 0.2s;">
+                    <div class="w-16 h-16 bg-brand-cream rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="text-2xl font-serif text-brand-olive font-bold">02</span>
+                    </div>
+                    <h3 class="text-2xl font-bold">Tradição</h3>
+                    <p class="text-brand-ink/60">Nosso tempero é único, passado de geração em geração e aperfeiçoado por décadas.</p>
+                </div>
+                <div class="space-y-4 fade-in" style="animation-delay: 0.4s;">
+                    <div class="w-16 h-16 bg-brand-cream rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="text-2xl font-serif text-brand-olive font-bold">03</span>
+                    </div>
+                    <h3 class="text-2xl font-bold">Ambiente Familiar</h3>
+                    <p class="text-brand-ink/60">Um lugar onde você se sente em casa, ideal para momentos inesquecíveis.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu Section -->
+    <section id="menu" class="py-24 px-6 overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-20 fade-in">
+                <h2 class="text-5xl md:text-6xl font-bold mb-6">Nosso Cardápio</h2>
+                <div class="w-24 h-1 bg-brand-olive mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-20">
+                <!-- Food Menu -->
+                <div class="space-y-12">
+                    <div class="fade-in">
+                        <h3 class="text-3xl font-bold mb-8 italic border-b border-brand-ink/10 pb-4">Rodízio Completo</h3>
+                        <div class="space-y-6 bg-brand-cream/30 p-8 rounded-[2rem] border border-brand-olive/10 shadow-sm relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-brand-olive/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-150 duration-700"></div>
+                            <div class="relative z-10">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h4 class="text-2xl font-bold text-brand-olive mb-1">Experiência Tradicional</h4>
+                                        <p class="text-sm text-brand-ink/50 italic">Servido à vontade</p>
+                                    </div>
+                                </div>
+                                <p class="text-brand-ink/70 leading-relaxed mb-6">
+                                    Uma verdadeira jornada gastronômica que inclui <span class="font-bold text-brand-ink">todos os itens do nosso cardápio</span>, servidos em sequência para que você aprecie cada sabor no seu tempo.
+                                </p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="px-3 py-1 bg-brand-olive/10 text-brand-olive text-xs font-bold rounded-full uppercase tracking-wider">Sopa de Capeletti</span>
+                                    <span class="px-3 py-1 bg-brand-olive/10 text-brand-olive text-xs font-bold rounded-full uppercase tracking-wider">Galeto</span>
+                                    <span class="px-3 py-1 bg-brand-olive/10 text-brand-olive text-xs font-bold rounded-full uppercase tracking-wider">Espaguete</span>
+                                    <span class="px-3 py-1 bg-brand-olive/10 text-brand-olive text-xs font-bold rounded-full uppercase tracking-wider">Risoto</span>
+                                    <span class="px-3 py-1 bg-brand-olive/10 text-brand-olive text-xs font-bold rounded-full uppercase tracking-wider">Polenta</span>
+                                    <span class="px-3 py-1 bg-brand-olive/10 text-brand-olive text-xs font-bold rounded-full uppercase tracking-wider">Salada</span>
+                                    <span class="px-3 py-1 bg-brand-olive/10 text-brand-olive text-xs font-bold rounded-full uppercase tracking-wider">Tortéi</span>
+                                    <span class="px-3 py-1 bg-brand-olive/10 text-brand-olive text-xs font-bold rounded-full uppercase tracking-wider">Maionese</span>
+                                    <span class="px-3 py-1 bg-brand-olive/10 text-brand-olive text-xs font-bold rounded-full uppercase tracking-wider">Costelinhas</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fade-in" style="animation-delay: 0.2s;">
+                        <h3 class="text-3xl font-bold mb-8 italic border-b border-brand-ink/10 pb-4">Cardápio</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-end border-b border-dashed border-brand-ink/20 pb-2"><h4 class="text-lg font-medium">Galeto ao Primo Canto</h4></div>
+                            <div class="flex justify-between items-end border-b border-dashed border-brand-ink/20 pb-2"><h4 class="text-lg font-medium">Espaguete ao molho de moela</h4></div>
+                            <div class="flex justify-between items-end border-b border-dashed border-brand-ink/20 pb-2"><h4 class="text-lg font-medium">Polenta recheada c/queijo</h4></div>
+                            <div class="flex justify-between items-end border-b border-dashed border-brand-ink/20 pb-2"><h4 class="text-lg font-medium">Risoto de Frango</h4></div>
+                            <div class="flex justify-between items-end border-b border-dashed border-brand-ink/20 pb-2"><h4 class="text-lg font-medium">Maionese de batata</h4></div>
+                            <div class="flex justify-between items-end border-b border-dashed border-brand-ink/20 pb-2"><h4 class="text-lg font-medium">Sopa de Capeletti ao Brôdo</h4></div>
+                            <div class="flex justify-between items-end border-b border-dashed border-brand-ink/20 pb-2"><h4 class="text-lg font-medium">Costelinhas de Porco</h4></div>
+                            <div class="flex justify-between items-end border-b border-dashed border-brand-ink/20 pb-2"><h4 class="text-lg font-medium">Tortéi de Abóbora</h4></div>
+                            <div class="flex justify-between items-end border-b border-dashed border-brand-ink/20 pb-2"><h4 class="text-lg font-medium">Salada Verde</h4></div>
+                        </div>
+                    </div>
+
+                    <div class="fade-in" style="animation-delay: 0.4s;">
+                        <h3 class="text-3xl font-bold mb-8 italic border-b border-brand-ink/10 pb-4">Sobremesas</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-end border-b border-dashed border-brand-ink/20 pb-2"><h4 class="text-lg font-medium">Sagú de vinho tinto</h4></div>
+                            <div class="flex justify-between items-end border-b border-dashed border-brand-ink/20 pb-2"><h4 class="text-lg font-medium">Pudim de Leite Condensado</h4></div>
+                            <div class="flex justify-between items-end border-b border-dashed border-brand-ink/20 pb-2"><h4 class="text-lg font-medium">Creme de Papaia</h4></div>
+                            <div class="flex justify-between items-end border-b border-dashed border-brand-ink/20 pb-2"><h4 class="text-lg font-medium">Petit Gâteau</h4></div>
+                            <div class="flex justify-between items-end border-b border-dashed border-brand-ink/20 pb-2"><h4 class="text-lg font-medium">Mousse de maracujá</h4></div>
+                            <div class="flex justify-between items-end border-b border-dashed border-brand-ink/20 pb-2"><h4 class="text-lg font-medium">Strogonoff de nozes</h4></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Food Image Collage -->
+                <div class="grid grid-cols-2 gap-4 h-fit self-start fade-in" style="animation-delay: 0.3s;">
+                    <div class="bg-brand-cream/40 rounded-3xl overflow-hidden flex items-center justify-center p-2 shadow-inner">
+                        <img src="src/assets/images/regenerated_image_1778292581480.png" alt="Massa" class="w-full h-auto object-contain rounded-2xl">
+                    </div>
+                    <div class="space-y-4">
+                        <div class="bg-brand-cream/40 rounded-3xl overflow-hidden flex items-center justify-center p-2 shadow-inner">
+                            <img src="src/assets/images/regenerated_image_1778292585422.png" alt="Polenta" class="w-full h-auto object-contain rounded-2xl">
+                        </div>
+                        <div class="bg-brand-cream/40 rounded-3xl overflow-hidden flex items-center justify-center p-2 shadow-inner">
+                            <img src="src/assets/images/regenerated_image_1778292587382.png" alt="Salada" class="w-full h-auto object-contain rounded-2xl">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section id="gallery" class="py-24 bg-brand-ink text-white overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+                <div class="fade-in">
+                    <h2 class="text-5xl md:text-7xl font-bold italic">Galeria de Sabores</h2>
+                </div>
+                <p class="max-w-xs text-white/50 text-sm italic fade-in">Um vislumbre do que espera por você.</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="aspect-square overflow-hidden rounded-2xl group cursor-crosshair fade-in">
+                    <img src="src/assets/images/regenerated_image_1778291081076.png" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                </div>
+                <div class="aspect-square overflow-hidden rounded-2xl group cursor-crosshair fade-in" style="animation-delay: 0.1s;">
+                    <img src="src/assets/images/regenerated_image_1778291082817.jpg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                </div>
+                <div class="aspect-square overflow-hidden rounded-2xl group cursor-crosshair fade-in" style="animation-delay: 0.2s;">
+                    <img src="src/assets/images/regenerated_image_1778291083688.jpg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                </div>
+                <div class="aspect-square overflow-hidden rounded-2xl group cursor-crosshair fade-in" style="animation-delay: 0.3s;">
+                    <img src="src/assets/images/regenerated_image_1778291084500.jpg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                </div>
+                <div class="aspect-square overflow-hidden rounded-2xl group cursor-crosshair fade-in" style="animation-delay: 0.4s;">
+                    <img src="src/assets/images/regenerated_image_1778291080196.jpg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                </div>
+                <div class="aspect-square overflow-hidden rounded-2xl group cursor-crosshair fade-in" style="animation-delay: 0.5s;">
+                    <img src="src/assets/images/regenerated_image_1778292589254.png" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                </div>
+                <div class="aspect-square overflow-hidden rounded-2xl group cursor-crosshair fade-in" style="animation-delay: 0.6s;">
+                    <img src="src/assets/images/regenerated_image_1778292590945.png" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                </div>
+                <div class="aspect-square overflow-hidden rounded-2xl group cursor-crosshair fade-in" style="animation-delay: 0.7s;">
+                    <img src="src/assets/images/regenerated_image_1778292592524.png" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reservation Section -->
+    <section id="contact" class="py-24 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="bg-brand-cream border border-brand-ink/5 rounded-[3rem] p-12 md:p-20 shadow-2xl relative overflow-hidden fade-in">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-brand-olive/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                    <div>
+                        <h2 class="text-5xl font-bold mb-8">Reserve sua mesa</h2>
+                        <p class="text-brand-ink/70 mb-12 text-lg">
+                            Estamos prontos para receber você e sua família para uma experiência inesquecível.
+                            Entre em contato por telefone ou visite-nos.
+                        </p>
+
+                        <div class="space-y-8">
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-brand-olive">
+                                    <i data-lucide="map-pin" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-lg">Localização</h4>
+                                    <p class="text-brand-ink/60">Avenida Comendador Franco, 3077 <br />Curitiba - PR</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-brand-olive">
+                                    <i data-lucide="phone" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-lg">Telefone / WhatsApp</h4>
+                                    <p class="text-brand-ink/60 text-xl font-serif">(41) 3266-4443</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-brand-olive">
+                                    <i data-lucide="clock" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-lg">Horários</h4>
+                                    <p class="text-brand-ink/60">
+                                        Terça à Sábado: 11:30h - 14:30h | 19:00h - 22:30h<br />
+                                        Domingo: 11:00h - 15:30h
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-brand-olive">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-lg">Siga-nos</h4>
+                                    <a href="https://instagram.com/galeteriacaxias" target="_blank" class="text-brand-ink/60 underline cursor-pointer hover:text-brand-olive transition-colors">@galeteriacaxias</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-10 sm:p-12 rounded-[2.5rem] shadow-xl border border-brand-ink/5 flex flex-col justify-between relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-brand-olive/5 rounded-full blur-2xl -mr-16 -mt-16"></div>
+                        
+                        <div class="relative z-10 space-y-6 flex-1 flex flex-col justify-center">
+                            <div>
+                                <span class="text-xs text-brand-olive font-bold uppercase tracking-widest block mb-2">Reservas Práticas</span>
+                                <h3 class="text-3xl font-bold text-brand-ink font-serif leading-tight">Agende por Telefone ou WhatsApp</h3>
+                                <p class="text-brand-ink/65 text-sm mt-3 leading-relaxed">
+                                    Para garantir a sua mesa de forma rápida e prática, fale diretamente com a nossa equipe realizando uma ligação direta ou abrindo uma conversa em nosso canal do WhatsApp!
+                                </p>
+                            </div>
+
+                            <div class="bg-brand-cream/40 p-6 rounded-2xl border border-brand-ink/5 space-y-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-brand-olive text-white rounded-xl flex items-center justify-center shadow-md">
+                                        <i data-lucide="phone"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-brand-ink/40 font-bold uppercase tracking-wider">Ligação Direta</p>
+                                        <a href="tel:+554132664443" class="text-xl md:text-2xl font-bold font-serif text-brand-ink hover:text-brand-olive transition-colors">(41) 3266-4443</a>
+                                    </div>
+                                </div>
+                                <div class="border-t border-brand-ink/5 pt-4 flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-emerald-600 text-white rounded-xl flex items-center justify-center shadow-md">
+                                        <i data-lucide="message-square"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-brand-ink/40 font-bold uppercase tracking-wider">Enviar Mensagem</p>
+                                        <a href="https://wa.me/554132664443" target="_blank" class="text-xl md:text-2xl font-bold font-serif text-emerald-700 hover:text-emerald-800 transition-colors">(41) 3266-4443</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                                <a href="tel:+554132664443" class="px-6 py-4 bg-brand-olive text-white rounded-2xl font-bold text-sm hover:bg-brand-olive/90 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-center">
+                                    <i data-lucide="phone" class="w-4 h-4"></i> Ligar Agora
+                                </a>
+                                <a href="https://wa.me/554132664443" target="_blank" class="px-6 py-4 bg-emerald-600 text-white rounded-2xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-center">
+                                    <i data-lucide="message-circle" class="w-4 h-4"></i> Reservar via Whats
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-white border-t border-brand-ink/5 py-12 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="text-xl font-bold font-serif">
+                Galeteria <span class="text-brand-olive">Caxias</span>
+            </div>
+            <div class="flex gap-8 text-sm text-brand-ink/50 font-medium">
+                <span class="hover:text-brand-olive cursor-pointer transition-colors">Política de Privacidade</span>
+                <span class="text-brand-ink/40">© 2024 Galeteria Caxias</span>
+            </div>
+            <div class="flex gap-4">
+                <a href="https://instagram.com/galeteriacaxias" target="_blank" aria-label="Acessar Instagram" class="w-10 h-10 rounded-full bg-brand-cream flex items-center justify-center hover:bg-brand-olive hover:text-white transition-all cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                </a>
+                 <a href="tel:+554132664443" aria-label="Ligar para o restaurante" class="w-10 h-10 rounded-full bg-brand-cream flex items-center justify-center hover:bg-brand-olive hover:text-white transition-all cursor-pointer">
+                    <i data-lucide="phone" class="w-5 h-5"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Init Icons
+        lucide.createIcons();
+
+        // --- ADMIN PORTAL & GOOGLE SHEETS INTEGRATION ---
+        let currentAdmin = null;
+        let cachedToken = null;
+        let savedSpreadsheetId = "";
+        let localReservations = [];
+
+        // Initialize Firebase on window load
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initFirebaseAndAuth();
+            const tabBtn = document.getElementById('btn-open-new-tab');
+            if (tabBtn) {
+                tabBtn.href = window.location.href;
+            }
+        });
+
+        function showAuthError(msg, isPopupClosed = false) {
+            const errDiv = document.getElementById('auth-error-message');
+            const errText = document.getElementById('auth-error-text');
+            const errAction = document.getElementById('auth-error-action');
+            if (errDiv && errText && errAction) {
+                if (msg) {
+                    errText.textContent = msg;
+                    if (isPopupClosed) {
+                        errAction.innerHTML = "💡 <strong>Solução Rápida:</strong> Como o navegador ou extensão bloqueou o painel pop-up, utilize o botão <strong>Entrar por Redirecionamento</strong> abaixo ou clique em <strong>Abrir Aplicativo em Nova Aba</strong>.";
+                    } else {
+                        errAction.textContent = "💡 Dica: Verifique se as permissões de cookies ou pop-ups estão habilitadas ou use o Redirecionamento.";
+                    }
+                    errDiv.classList.remove('hidden');
+                } else {
+                    errDiv.classList.add('hidden');
+                    errText.textContent = "";
+                    errAction.textContent = "";
+                }
+            }
+        }
+
+        async function initFirebaseAndAuth() {
+            try {
+                const configRes = await fetch('/api/firebase-config');
+                if (!configRes.ok) throw new Error("Failed to fetch firebase config");
+                const firebaseConfig = await configRes.json();
+                
+                // Initialize Firebase Compat
+                firebase.initializeApp(firebaseConfig);
+
+                // Handle redirect result if user used redirection login
+                firebase.auth().getRedirectResult()
+                    .then((result) => {
+                        const wasPending = sessionStorage.getItem('google_auth_pending_redirect');
+                        sessionStorage.removeItem('google_auth_pending_redirect');
+
+                        if (result && result.credential) {
+                            cachedToken = result.credential.accessToken;
+                            if (cachedToken) {
+                                sessionStorage.setItem('google_sheets_token', cachedToken);
+                            }
+                            if (result.user) {
+                                currentAdmin = result.user;
+                                updateAdminUI();
+                                loadAdminData();
+                                
+                                // Automatically reveal modal after returning from successful OAuth redirect
+                                const modal = document.getElementById('admin-modal');
+                                if (modal && modal.classList.contains('hidden')) {
+                                    modal.classList.remove('hidden');
+                                }
+                            }
+                        } else if (wasPending) {
+                            const user = firebase.auth().currentUser;
+                            if (user) {
+                                currentAdmin = user;
+                                updateAdminUI();
+                                loadAdminData();
+                                const modal = document.getElementById('admin-modal');
+                                if (modal && modal.classList.contains('hidden')) {
+                                    modal.classList.remove('hidden');
+                                }
+                            }
+                        }
+                    })
+                    .catch((err) => {
+                        console.error("Redirect auth error:", err);
+                        showAuthError("Erro na autenticação por redirecionamento: " + err.message);
+                    });
+
+                // Retrieve token from sessionStorage if present to keep sync capability alive
+                const storedToken = sessionStorage.getItem('google_sheets_token');
+                if (storedToken) {
+                    cachedToken = storedToken;
+                }
+                
+                // Monitor auth state changes
+                firebase.auth().onAuthStateChanged(async (user) => {
+                    if (user) {
+                        currentAdmin = user;
+                    } else {
+                        currentAdmin = null;
+                        cachedToken = null;
+                        sessionStorage.removeItem('google_sheets_token');
+                    }
+                    updateAdminUI();
+                });
+            } catch (err) {
+                console.error("Erro initializing Firebase Auth:", err);
+            }
+        }
+
+        function toggleAdminModal() {
+            const modal = document.getElementById('admin-modal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                loadAdminData();
+            }
+        }
+
+        async function loginAdmin() {
+            try {
+                showAuthError(""); // Clear old error
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.addScope('https://www.googleapis.com/auth/spreadsheets');
+                
+                const result = await firebase.auth().signInWithPopup(provider);
+                cachedToken = result.credential.accessToken;
+                if (cachedToken) {
+                    sessionStorage.setItem('google_sheets_token', cachedToken);
+                }
+                currentAdmin = result.user;
+                
+                updateAdminUI();
+                await loadAdminData();
+            } catch (err) {
+                console.error("Login failed:", err);
+                const isClosed = err.code === "auth/popup-closed-by-user" || (err.message && err.message.includes("closed-by-user"));
+                showAuthError(err.message || err, isClosed);
+            }
+        }
+
+        async function loginAdminRedirect() {
+            try {
+                showAuthError(""); // Clear old error
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.addScope('https://www.googleapis.com/auth/spreadsheets');
+                
+                sessionStorage.setItem('google_auth_pending_redirect', 'true');
+                await firebase.auth().signInWithRedirect(provider);
+            } catch (err) {
+                console.error("Redirect login start failed:", err);
+                showAuthError("Falha ao iniciar redirecionamento de login: " + err.message);
+            }
+        }
+
+        async function logoutAdmin() {
+            try {
+                await firebase.auth().signOut();
+                currentAdmin = null;
+                cachedToken = null;
+                sessionStorage.removeItem('google_sheets_token');
+                updateAdminUI();
+            } catch (err) {
+                console.error("Logout failed:", err);
+            }
+        }
+
+        async function loadAdminData() {
+            try {
+                const res = await fetch('/api/admin/reservas');
+                const data = await res.json();
+                localReservations = data.reservations || [];
+                savedSpreadsheetId = data.spreadsheetId || "";
+                renderReservationsTable();
+                updateSheetsSection();
+            } catch (err) {
+                console.error("Failed to load admin data:", err);
+            }
+        }
+
+        function updateAdminUI() {
+            const authRequiredBlock = document.getElementById('admin-auth-required');
+            const mainPanelBlock = document.getElementById('admin-panel-main');
+            if (!authRequiredBlock || !mainPanelBlock) return;
+            
+            if (currentAdmin) {
+                authRequiredBlock.classList.add('hidden');
+                mainPanelBlock.classList.remove('hidden');
+                
+                // Profile
+                document.getElementById('admin-avatar').src = currentAdmin.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150';
+                document.getElementById('admin-name').textContent = currentAdmin.displayName || 'Administrador';
+                document.getElementById('admin-email').textContent = currentAdmin.email || '';
+            } else {
+                authRequiredBlock.classList.remove('hidden');
+                mainPanelBlock.classList.add('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        function updateSheetsSection() {
+            const statusEl = document.getElementById('sheets-connection-status');
+            const setupActions = document.getElementById('sheets-setup-actions');
+            const connectedActions = document.getElementById('sheets-connected-actions');
+            if (!statusEl || !setupActions || !connectedActions) return;
+            
+            // If admin is authenticated but has no Google Sheets oauth token in-memory yet
+            if (currentAdmin && !cachedToken) {
+                statusEl.textContent = "Conexão Google pendente ou expirada. Clique em 'Entrar com o Google' para ativar.";
+                statusEl.className = "text-sm text-amber-600 font-bold";
+                setupActions.classList.add('hidden');
+                connectedActions.classList.add('hidden');
+                return;
+            }
+
+            if (savedSpreadsheetId) {
+                statusEl.textContent = "Planilha vinculada e pronta para sincronização.";
+                statusEl.className = "text-sm text-emerald-600 font-bold";
+                
+                setupActions.classList.add('hidden');
+                connectedActions.classList.remove('hidden');
+                
+                document.getElementById('label-spreadsheet-id').textContent = savedSpreadsheetId;
+                document.getElementById('link-open-sheet').href = `https://docs.google.com/spreadsheets/d/${savedSpreadsheetId}/edit`;
+            } else {
+                statusEl.textContent = "Nenhuma planilha vinculada para sincronizar as reservas.";
+                statusEl.className = "text-sm text-zinc-500 font-medium";
+                
+                setupActions.classList.remove('hidden');
+                connectedActions.classList.add('hidden');
+            }
+        }
+
+        async function handleCreateSpreadsheet() {
+            if (!cachedToken) {
+                alert("Por favor, faça login com o Google para autorizar o Sheets!");
+                return;
+            }
+            
+            const btn = document.getElementById('btn-create-sheet');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = "<div class='spinner w-4 h-4'></div> Criando...";
+
+            try {
+                const res = await fetch('/api/admin/create-sheet', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accessToken: cachedToken })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || "Erro ao criar planilha");
+                }
+
+                const data = await res.json();
+                savedSpreadsheetId = data.spreadsheetId;
+                updateSheetsSection();
+                alert("Planilha criada e vinculada com sucesso!");
+                await loadAdminData();
+            } catch (err) {
+                console.error(err);
+                alert("Falha ao criar planilha: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                lucide.createIcons();
+            }
+        }
+
+        async function handleSaveSpreadsheetId() {
+            const inputId = document.getElementById('input-spreadsheet-id').value.trim();
+            if (!inputId) {
+                alert("Forneça um ID de planilha válido.");
+                return;
+            }
+            
+            // Support extracting ID from full Spreadsheet URL
+            let parsedId = inputId;
+            if (inputId.includes('docs.google.com/spreadsheets')) {
+                const match = inputId.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (match && match[1]) {
+                    parsedId = match[1];
+                }
+            }
+
+            try {
+                const res = await fetch('/api/admin/save-spreadsheet-id', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ spreadsheetId: parsedId })
+                });
+
+                if (!res.ok) throw new Error("Falha ao salvar ID");
+                
+                savedSpreadsheetId = parsedId;
+                document.getElementById('input-spreadsheet-id').value = "";
+                updateSheetsSection();
+                alert("Planilha existente vinculada com sucesso!");
+                await loadAdminData();
+            } catch (err) {
+                console.error(err);
+                alert("Falha ao vincular planilha.");
+            }
+        }
+
+        async function handleDisconnectSpreadsheet() {
+            if (!confirm("Tem certeza que gostaria de desvincular esta planilha? Novas reservas não serão salvas no Google Sheets até você reconectar.")) {
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/admin/save-spreadsheet-id', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ spreadsheetId: "" })
+                });
+
+                if (!res.ok) throw new Error("Erro");
+                savedSpreadsheetId = "";
+                updateSheetsSection();
+                alert("Planilha desvinculada.");
+            } catch (err) {
+                console.error(err);
+                alert("Desvinculação falhou.");
+            }
+        }
+
+        async function handleSyncReservations() {
+            if (!cachedToken) {
+                alert("Sessão Google pendente ou expirada. Por favor, conecte novamente clicando em 'Entrar com o Google' para obter permissão para envio ao Sheets.");
+                return;
+            }
+            if (!savedSpreadsheetId) {
+                alert("Por favor, conecte ou crie uma planilha do Google Sheets primeiro!");
+                return;
+            }
+
+            const activeSyncBtn = document.getElementById('btn-sync-all');
+            const syncBtnTxt = document.getElementById('sync-btn-txt');
+            const originalTxt = syncBtnTxt.textContent;
+            
+            activeSyncBtn.disabled = true;
+            syncBtnTxt.textContent = "Sincronizando...";
+
+            try {
+                const res = await fetch('/api/admin/sync-sheet', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        accessToken: cachedToken,
+                        spreadsheetId: savedSpreadsheetId
+                    })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || "Erro de sincronização");
+                }
+
+                const data = await res.json();
+                alert(`Sincronização concluída! ${data.syncedCount || 0} reserva(s) adicionada(s) à planilha.`);
+                await loadAdminData();
+            } catch (err) {
+                console.error(err);
+                alert("Erro ao sincronizar reservas: " + err.message);
+            } finally {
+                activeSyncBtn.disabled = false;
+                syncBtnTxt.textContent = originalTxt;
+            }
+        }
+
+        function renderReservationsTable() {
+            const tableBody = document.getElementById('table-reservations-body');
+            const btnSync = document.getElementById('btn-sync-all');
+            if (!tableBody || !btnSync) return;
+            
+            if (localReservations.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-8 py-12 text-center text-brand-ink/40 font-medium italic">Nenhuma reserva localizada.</td>
+                    </tr>
+                `;
+                btnSync.disabled = true;
+                return;
+            }
+
+            const pendingCount = localReservations.filter(r => !r.synced).length;
+            btnSync.disabled = pendingCount === 0;
+            document.getElementById('sync-btn-txt').textContent = `Sincronizar Pendentes (${pendingCount})`;
+
+            tableBody.innerHTML = localReservations.map(r => {
+                const statusBadge = r.synced 
+                    ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i> Sincronizado
+                       </span>`
+                    : `<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200">
+                        <i class="w-1.5 h-1.5 bg-amber-500 rounded-full"></i> Pendente
+                       </span>`;
+
+                const dateFormated = new Date(r.data + 'T00:00:00').toLocaleDateString('pt-BR');
+                const createdFormated = new Date(r.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+
+                return `
+                    <tr class="hover:bg-brand-cream/20 transition-colors">
+                        <td class="px-8 py-4 font-semibold text-brand-ink">
+                            ${r.nome}
+                            <span class="block text-xs text-brand-ink/50 font-normal mt-0.5">${r.telefone}</span>
+                        </td>
+                        <td class="px-6 py-4 font-medium">${dateFormated}</td>
+                        <td class="px-6 py-4 text-center font-bold text-brand-olive">${r.pessoas}</td>
+                        <td class="px-6 py-4 max-w-[200px] truncate text-xs text-brand-ink/65" title="${r.observacoes || 'Sem observações'}">
+                            ${r.observacoes || '<span class="italic text-brand-ink/30">Sem observações</span>'}
+                        </td>
+                        <td class="px-6 py-4 text-center">${statusBadge}</td>
+                        <td class="px-8 py-4 text-right text-xs text-brand-ink/40 font-medium">${createdFormated}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            lucide.createIcons();
+        }
+
+        // Responsive Menu
+        function toggleMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('menu-icon');
+            menu.classList.toggle('hidden');
+            
+            // Re-render icon to swap menu/x if needed (since it's a static icon here, we handle swap manually)
+            const isHidden = menu.classList.contains('hidden');
+            icon.setAttribute('data-lucide', isHidden ? 'menu' : 'x');
+            lucide.createIcons();
+        }
+
+        // Form Logic
+        const form = document.getElementById('reserve-form');
+        const successView = document.getElementById('success-view');
+        const submitBtn = document.getElementById('submit-btn');
+        const btnText = document.getElementById('btn-text');
+        const btnSpinner = document.getElementById('btn-spinner');
+
+        function resetForm() {
+            if (form) form.reset();
+            if (successView) successView.classList.add('hidden');
+            // Reset errors
+            document.querySelectorAll('[id^="error-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('input, select, textarea').forEach(el => el.classList.remove('border-red-500'));
+        }
+
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Basic Validation
+                let hasError = false;
+                const fields = ['nome', 'telefone', 'data', 'pessoas'];
+                
+                fields.forEach(field => {
+                    const input = document.getElementById(field);
+                    const errorEl = document.getElementById(`error-${field}`);
+                    const value = input.value.trim();
+                    
+                    if (!value) {
+                        input.classList.add('border-red-500');
+                        errorEl.classList.remove('hidden');
+                        hasError = true;
+                    } else {
+                        input.classList.remove('border-red-500');
+                        errorEl.classList.add('hidden');
+                    }
+                });
+
+                if (hasError) return;
+
+                // Capture form data
+                const payload = {
+                    nome: document.getElementById('nome').value.trim(),
+                    telefone: document.getElementById('telefone').value.trim(),
+                    data: document.getElementById('data').value,
+                    pessoas: document.getElementById('pessoas').value,
+                    observacoes: document.getElementById('observacoes').value.trim()
+                };
+
+                // Submit Processing
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    if (btnText) btnText.textContent = "Processando...";
+                    if (btnSpinner) btnSpinner.classList.remove('hidden');
+                }
+
+                try {
+                    // Make a real fetch request to the server
+                    const response = await fetch('/api/reserve', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Erro na rede ou servidor');
+                    }
+
+                    const result = await response.json();
+                    console.log("Resposta do Servidor:", result);
+                    
+                    // Show Success
+                    if (successView) {
+                        successView.classList.remove('hidden');
+                    }
+                    lucide.createIcons(); // Refresh icons inside success view
+                } catch (err) {
+                    console.error(err);
+                    alert("Ocorreu um erro ao enviar sua reserva. Tente novamente.");
+                } finally {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        if (btnText) btnText.textContent = "Solicitar Reserva";
+                        if (btnSpinner) btnSpinner.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
